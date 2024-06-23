@@ -1,11 +1,13 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
 const App = () => {
-  return (
-    <div className="h-screen flex justify-center items-center content-center">
-      <h1 className="h-4 text-4xl text-gray-500   hover:text-cyan-300 cursor-pointer">
-        Hello world
-      </h1>
-    </div>
-  );
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path='/' element={<LoginPage />}></Route>
+            </Routes>
+        </BrowserRouter>
+    );
 };
 
 export default App;
