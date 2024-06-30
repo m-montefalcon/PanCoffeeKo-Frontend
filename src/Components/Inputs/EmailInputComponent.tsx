@@ -1,4 +1,4 @@
-import { InputComponentProps } from '../interface/InputComponentsProps';
+import { InputComponentProps } from '../../interface/InputComponentsProps';
 
 const EmailInputComponent: React.FC<InputComponentProps> = ({ onChangeFunction }) => {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {

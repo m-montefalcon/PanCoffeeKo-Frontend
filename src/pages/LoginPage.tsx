@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import EmailInputComponent from '../InputComponents/EmailInputComponent';
-import PasswordInputComponent from '../InputComponents/PasswordInputComponent';
-import HyperlinkComponent from '../assets/HyperlinkComponents/HyperlinkComponent';
+import EmailInputComponent from '../Components/Inputs/EmailInputComponent';
+import PasswordInputComponent from '../Components/Inputs/PasswordInputComponent';
+import HyperlinkComponent from '../Components/Hyperlinks/HyperlinkComponent';
+import { Link } from 'react-router-dom';
 const LoginPage = () => {
     //Interface for form data
     interface FormData {
@@ -64,17 +65,20 @@ const LoginPage = () => {
                             </div>
                         </div>
                         <div className='grid grid-cols-1 gap-1'>
-                            <button
-                                disabled={isDisabledButton}
-                                type='submit'
-                                className={
-                                    !isDisabledButton
-                                        ? 'bg-blue-500 text-white py-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300'
-                                        : 'bg-blue-500 text-white py-3 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 opacity-60 cursor-not-allowed'
-                                }
-                            >
-                                Login
-                            </button>
+                            <Link to='/home' className='inline-block'>
+                                <button
+                                    disabled={isDisabledButton}
+                                    type='submit'
+                                    className={
+                                        !isDisabledButton
+                                            ? 'bg-blue-500 text-white py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition duration-300'
+                                            : 'bg-blue-500 text-white py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 transition duration-300 opacity-60 cursor-not-allowed'
+                                    }
+                                    style={{ display: 'block', width: '100%' }} // Ensure button takes full width
+                                >
+                                    Login
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
