@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SideNavBar from './SideNavBar';
 
@@ -58,7 +58,7 @@ const NavBar = () => {
                 <div className='flex-none'>
                     <ul className='menu menu-horizontal px-0'>
                         <li>
-                            <details>
+                            <details className='z-50'>
                                 <summary className='w-48 text-lg'>Kendrick Lamar</summary>
                                 <ul className='bg-base-100 rounded-t-none p-2'>
                                     <li>
