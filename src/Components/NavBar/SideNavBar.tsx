@@ -1,7 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SideNavBarProps } from '../../interface/SideNavBarProps';
+import SideNavList from './SideNavList';
 import {
     faChartSimple,
     faUsers,
@@ -40,72 +38,12 @@ const SideNavBar = ({ isSidebarOpen, closeSidebar }: SideNavBarProps) => {
                         </button>
                     </div>
                     <ul>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faChartSimple} className='mr-4' />
-                                    Dashboard
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faUsers} className='mr-2' />
-                                    Users
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faBoxOpen} className='mr-1' /> Products
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faUtensils} className='mr-3' />{' '}
-                                    Categories
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faBoxesPacking} className='mr-2' />{' '}
-                                    Suppliers
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to='/'
-                                className='flex items-center p-2 hover:bg-gray-200 text-xl'
-                            >
-                                <span>
-                                    <FontAwesomeIcon icon={faReceipt} className='mr-3 pl-2' />
-                                    {'  '}
-                                    Transactions
-                                </span>
-                            </Link>
-                        </li>
+                        <SideNavList pathname='home' icon={faChartSimple} name='Dashboard' />
+                        <SideNavList pathname='users' icon={faUsers} name='Users' />
+                        <SideNavList pathname='products' icon={faBoxOpen} name='Products' />
+                        <SideNavList pathname='categories' icon={faUtensils} name='Categories' />
+                        <SideNavList pathname='suppliers' icon={faBoxesPacking} name='Suppliers' />
+                        <SideNavList pathname='transactions' icon={faReceipt} name='Transactions' />
                     </ul>
                 </div>
             </div>
