@@ -1,4 +1,4 @@
-import { InputComponentProps } from '../interface/InputComponentsProps';
+import { InputComponentProps } from '../../interface/InputComponentsProps';
 const PasswordInputComponent: React.FC<InputComponentProps> = ({ onChangeFunction }) => {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         onChangeFunction(event.target.name, event.target.value);
