@@ -17,7 +17,10 @@ const SideNavList = ({ pathname, icon, name }: SideNavListType) => {
                         {name}
                     </span>
                 ) : (
-                    <Link to={path} className='flex items-center p-2 text-xl  hover:bg-gray-200 '>
+                    <Link
+                        to={path}
+                        className='flex items-center p-2 text-xl  hover:bg-gray-200  rounded'
+                    >
                         <FontAwesomeIcon icon={icon} className='mr-2' />
                         {name}
                     </Link>
