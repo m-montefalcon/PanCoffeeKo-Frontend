@@ -3,8 +3,8 @@ import axios, { AxiosError } from 'axios';
 import NavBar from '../NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import UsersModal from '../Modal/Users/UsersEditModal';
-
+import UsersEditModal from '../Modal/Users/UsersEditModal';
+import UsersAddModal from '../Modal/Users/UsersAddModal';
 interface UserData {
     id: string;
     name: string;
@@ -14,7 +14,9 @@ interface UserData {
 const UsersPage = () => {
     const [users, setUsers] = useState<UserData[]>([]); //Set useState for users with interface UserData in a array type
     const [isLoading, setIsLoading] = useState<boolean>(false); //Set useState for conditional rendering in loading
-    const [openModal, setOpenModal] = useState<boolean>(false); //Set useState for state management of opening the modal
+    const [openEditModal, setOpenEditModal] = useState<boolean>(false); //Set useState for state management of opening the modal
+    const [openAddModal, setOpenAddModal] = useState<boolean>(false);
+
     const [error, setError] = useState<string | null>(null); //Set useState for fetching the error
     const [currentPage, setCurrentPage] = useState<number>(1); //Set useState for current number of pages defaulted by one
     const [totalPages, setTotalPages] = useState<number>(0); //Set useState for total pages
@@ -25,9 +27,16 @@ const UsersPage = () => {
     //Function the toggle the modal state
     const toggleModal = (userId: string, confirmed: boolean = false) => {
         setSelectedUserId(userId);
-        setOpenModal((prevState) => !prevState);
+        setOpenEditModal((prevState) => !prevState);
         if (confirmed) {
             fetchData(); // Refresh data if the modal was closed due to confirmation
+        }
+    };
+    //Function the toggle the modal state
+    const toggleAddModal = (confirmed: boolean = false) => {
+        setOpenAddModal((prevState) => !prevState);
+        if (confirmed) {
+            fetchData();
         }
     };
 
@@ -96,7 +105,7 @@ const UsersPage = () => {
                         Users{' '}
                         <FontAwesomeIcon
                             icon={faPlus}
-                            onClick={() => console.log('Clicked!')}
+                            onClick={() => toggleAddModal(false)}
                             className='mb-1 ml-3 text-lg cursor-pointer hover:bg-gray-100 rounded'
                         />
                     </div>
@@ -131,7 +140,7 @@ const UsersPage = () => {
                             {/* Also if the error state is true, it will show error component */}
                             {/* A button which allow to clear the error and fetch data again*/}
                             <button
-                                onClick={clearError}
+                                onClick={() => clearError}
                                 className='ml-2 text-blue-500 hover:underline'
                             >
                                 Retry
@@ -208,7 +217,10 @@ const UsersPage = () => {
                 </div>
             </div>
             {/* Render UsersModal based on openModal state */}
-            {openModal && <UsersModal onClose={toggleModal} selectedUserId={selectedUserId} />}
+            {openEditModal && (
+                <UsersEditModal onClose={toggleModal} selectedUserId={selectedUserId} />
+            )}
+            {openAddModal && <UsersAddModal onClose={toggleAddModal} />}
         </>
     );
 };
