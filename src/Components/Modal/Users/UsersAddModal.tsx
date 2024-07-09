@@ -39,7 +39,7 @@ const UsersAddModal: React.FC<UserAddModalProps> = ({ onClose }) => {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_APP_URL}user/register`,
+                `${import.meta.env.VITE_API_ENDPOINT}user/register`,
                 userForm,
                 {
                     headers: {
@@ -73,6 +73,7 @@ const UsersAddModal: React.FC<UserAddModalProps> = ({ onClose }) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const isValidEmail = emailRegex.test(userForm.email);
         const isPasswordNotEmpty = userForm.password !== '';
+        const isPasswordBelowEightChars = userForm.password.length > 8;
         const isPasswordAndConfirmPasswordSame = userForm.password === userForm.confirm_password; // Check if passwords match
         const isNameNotEmpty = userForm.name !== '';
 
@@ -81,6 +82,7 @@ const UsersAddModal: React.FC<UserAddModalProps> = ({ onClose }) => {
             !isValidEmail ||
                 !isPasswordNotEmpty ||
                 !isPasswordAndConfirmPasswordSame ||
+                !isPasswordBelowEightChars ||
                 !isNameNotEmpty,
         );
     };
@@ -165,6 +167,7 @@ const UsersAddModal: React.FC<UserAddModalProps> = ({ onClose }) => {
                                 onChange={handleInputChange}
                                 required
                                 disabled={disabledButton}
+                                minLength={8}
                             />
                         </label>
                         <label className='m-2 input input-bordered flex items-center gap-2'>
@@ -178,6 +181,7 @@ const UsersAddModal: React.FC<UserAddModalProps> = ({ onClose }) => {
                                 onChange={handleInputChange}
                                 required
                                 disabled={disabledButton}
+                                minLength={8}
                             />
                         </label>
                         <div className='flex items-center gap-2 justify-center'>
