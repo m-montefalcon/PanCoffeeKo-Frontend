@@ -1,11 +1,12 @@
-import NavBar from '../NavBar/NavBar'; // Importing NavBar component
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing FontAwesomeIcon for icons
-import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons'; // Importing specific icons from FontAwesome
-import { useEffect, useState } from 'react'; // Importing useEffect and useState hooks from React
-import SuppliersAddModal from '../Modal/Suppliers/SuppliersAddModal'; // Importing SuppliersAddModal component
-import axios, { AxiosError } from 'axios'; // Importing axios for making HTTP requests
+import React, { useEffect, useState } from 'react';
+import NavBar from '../NavBar/NavBar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import axios, { AxiosError } from 'axios';
+import SuppliersAddModal from '../Modal/Suppliers/SuppliersAddModal';
+import SuppliersEditModal from '../Modal/Suppliers/SuppliersEditModal';
 
-// Interface for defining structure of SuppliersData
+// Define the SuppliersData interface
 interface SuppliersData {
     id: string;
     name: string;
@@ -15,78 +16,85 @@ interface SuppliersData {
 
 // Suppliers functional component
 const Suppliers = () => {
-    const [suppliers, setSuppliers] = useState<SuppliersData[]>([]); // State for storing suppliers data
-
-    const [toggleOpenModal, setToggleOpenModal] = useState<boolean>(false); // State for controlling modal visibility
-
-    const [isLoading, setLoading] = useState<boolean>(false); // State for indicating loading state
-    const [error, setError] = useState<string | null>(null); // State for storing error message
-    const [currentPage, setCurrentPage] = useState<number>(1); // State for current page number
-    const [totalPages, setTotalPages] = useState<number>(0); // State for total number of pages
-    const perPage = 10; // Number of items per page
-    const startItemNumber = (currentPage - 1) * perPage + 1; // Calculating starting item number for current page
+    const [suppliers, setSuppliers] = useState<SuppliersData[]>([]);
+    const [toggleOpenModal, setToggleOpenModal] = useState<boolean>(false);
+    const [toggleOpenEditModal, setToggleOpenEditModal] = useState<boolean>(false);
+    const [isLoading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const perPage = 10;
+    const startItemNumber = (currentPage - 1) * perPage + 1;
+    const [selectedSupplier, setSelectedSupplier] = useState<SuppliersData>();
 
     // Function to toggle the add modal and fetch data upon confirmation
     const toggleAddModal = (confirm: boolean) => {
-        setToggleOpenModal((prevState) => !prevState); // Toggling modal state
+        setToggleOpenModal((prevState) => !prevState);
         if (confirm) {
-            fetchData(); // Fetch data if confirmation is true
+            fetchData();
         }
+    };
+
+    // Function to toggle the edit modal and set selected supplier
+    const toggleEditModal = (supplier: SuppliersData) => {
+        setSelectedSupplier(supplier); // Set selected supplier
+        setToggleOpenEditModal(true); // Open edit modal
     };
 
     // Function to fetch data from API
     const fetchData = async (page: number = currentPage) => {
         try {
-            setLoading(true); // Setting loading state to true
+            setLoading(true);
             const response = await axios.get(
                 `${import.meta.env.VITE_API_ENDPOINT}suppliers?page=${page}&per_page=${perPage}`,
-            ); // Making GET request to API
-            console.log(response.data);
+            );
             if (response.status === 200) {
-                // If request is successful
-                setSuppliers(response.data.suppliers.data); // Setting suppliers data
-                setCurrentPage(response.data.suppliers.current_page); // Setting current page
-                setTotalPages(response.data.suppliers.last_page); // Setting total pages
-                setLoading(false); // Setting loading state to false
+                setSuppliers(response.data.suppliers.data);
+                setCurrentPage(response.data.suppliers.current_page);
+                setTotalPages(response.data.suppliers.last_page);
+                setLoading(false);
             }
         } catch (error) {
-            handleFetchError(error as AxiosError); // Handling fetch error
+            handleFetchError(error as AxiosError);
         }
     };
 
     // Function to handle fetch errors
     const handleFetchError = (error: AxiosError<any>) => {
-        setLoading(false); // Setting loading state to false
-
+        setLoading(false);
         if (error.response) {
-            // If there is a response from the server
-            const responseData = error.response.data; // Extracting response data
-            const errorMessage = responseData.message || 'Unknown error occurred'; // Extracting error message
-            setError(`Error ${error.response.status}: ${errorMessage}`); // Setting error state with formatted message
+            const responseData = error.response.data;
+            const errorMessage = responseData.message || 'Unknown error occurred';
+            setError(`Error ${error.response.status}: ${errorMessage}`);
         } else if (error.request) {
-            // If the request was made but no response was received
-            setError('No response from server. Please try again later.'); // Setting error state
+            setError('No response from server. Please try again later.');
         } else {
-            // If something else caused the request to fail
-            setError('Error fetching data. Please check your network connection.'); // Setting error state
+            setError('Error fetching data. Please check your network connection.');
         }
+    };
+
+    // Function to clear error state and fetch data
+    const clearError = () => {
+        setError(null);
+        setLoading(true);
+        fetchData();
     };
 
     // useEffect hook to fetch data initially and on page change
     useEffect(() => {
-        fetchData(); // Fetching data on component mount and when currentPage changes
+        fetchData();
     }, [currentPage]);
 
     return (
         <>
-            <NavBar /> {/* Rendering NavBar component */}
+            <NavBar />
             <div className=' data-theme h-auto w-auto m-16 my-28 border-slate-border-slate-950 rounded'>
                 <div className='flex items-center justify-between'>
                     <div className='text-3xl'>
                         Suppliers
                         <FontAwesomeIcon
                             icon={faPlus}
-                            onClick={() => toggleAddModal(true)}
+                            onClick={() => setToggleOpenModal(true)}
                             className='mb-1 ml-3 text-lg cursor-pointer hover:bg-gray-100 rounded'
                         />
                     </div>
@@ -108,20 +116,12 @@ const Suppliers = () => {
                         </label>
                     </div>
                 </div>
-                {/* Rendering loading spinner if isLoading state is true */}
-                {/* Rendering error message if error state is true */}
-                {/* Rendering suppliers data if suppliers array has items */}
-                {/* Rendering no data message if suppliers array is empty */}
                 {isLoading ? (
                     <span className='loading loading-dots loading-lg flex justify-center w-30 my-10 mx-auto z-0'></span>
                 ) : error ? (
                     <div className='text-2xl flex justify-center text-center mt-9 p-4'>
                         {error}
-                        {/* Retry button to attempt fetching data again */}
-                        <button
-                            // onClick={() => clearError}
-                            className='ml-2 text-blue-500 hover:underline'
-                        >
+                        <button onClick={clearError} className='ml-2 text-blue-500 hover:underline'>
                             Retry
                         </button>
                     </div>
@@ -129,7 +129,6 @@ const Suppliers = () => {
                     <>
                         <div className='overflow-x-auto  border-inherit	'>
                             <table className='table'>
-                                {/* Table header */}
                                 <thead>
                                     <tr>
                                         <th></th>
@@ -140,16 +139,15 @@ const Suppliers = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {/* Rendering each supplier row */}
                                     {suppliers.map((data, index) => (
                                         <tr key={data.id} className='hover'>
                                             <th>{startItemNumber + index}</th>
                                             <td>{data.name}</td>
                                             <td>{data.contact_number}</td>
                                             <td>{data.supply_type}</td>
-
                                             <td>
                                                 <FontAwesomeIcon
+                                                    onClick={() => toggleEditModal(data)}
                                                     icon={faPenToSquare}
                                                     className='text-lg cursor-pointer hover:bg-gray-100 rounded'
                                                 />
@@ -158,9 +156,7 @@ const Suppliers = () => {
                                     ))}
                                 </tbody>
                             </table>
-                            {/* Pagination controls */}
                             <div className='flex justify-center mt-4'>
-                                {/* Previous page button */}
                                 <button
                                     className='join-item btn'
                                     disabled={currentPage <= 1}
@@ -168,9 +164,7 @@ const Suppliers = () => {
                                 >
                                     «
                                 </button>
-                                {/* Current page indicator */}
                                 <span className='join-item btn'>Page {currentPage}</span>
-                                {/* Next page button */}
                                 <button
                                     className='join-item btn'
                                     disabled={currentPage >= totalPages}
@@ -182,18 +176,25 @@ const Suppliers = () => {
                         </div>
                     </>
                 ) : (
-                    <>
-                        {' '}
-                        <div className='text-2xl flex justify-center text-center mt-9 p-4'>
-                            No data available
-                        </div>
-                    </>
+                    <div className='text-2xl flex justify-center text-center mt-9 p-4'>
+                        No data available
+                    </div>
                 )}
             </div>
-            {/* Rendering SuppliersAddModal if toggleOpenModal state is true */}
             {toggleOpenModal && <SuppliersAddModal onClose={setToggleOpenModal} />}
+            {toggleOpenEditModal && (
+                <SuppliersEditModal
+                    onClose={(confirm) => {
+                        setToggleOpenEditModal(false);
+                        if (confirm) {
+                            fetchData(); // Optionally fetch data upon confirmation
+                        }
+                    }}
+                    supplier={selectedSupplier as SuppliersData}
+                />
+            )}
         </>
     );
 };
 
-export default Suppliers; // Exporting Suppliers component
+export default Suppliers;
