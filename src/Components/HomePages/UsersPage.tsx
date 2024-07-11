@@ -83,6 +83,7 @@ const UsersPage = () => {
     //Function that clears the error and try to fetch the data
     const clearError = () => {
         setError(null);
+        setIsLoading(true);
         fetchData();
     };
 
@@ -140,7 +141,7 @@ const UsersPage = () => {
                             {/* Also if the error state is true, it will show error component */}
                             {/* A button which allow to clear the error and fetch data again*/}
                             <button
-                                onClick={() => clearError}
+                                onClick={clearError}
                                 className='ml-2 text-blue-500 hover:underline'
                             >
                                 Retry
