@@ -61,7 +61,7 @@ const SuppliersAddModal: React.FC<SuppliersAddModalProps> = ({ onClose }) => {
             );
 
             if (response.status === 200) {
-                onClose(false); // Close modal on successful registration
+                onClose(true); // Close modal on successful registration
             }
         } catch (error) {
             handleFetchError(error as AxiosError<any>); // Handle API call errors

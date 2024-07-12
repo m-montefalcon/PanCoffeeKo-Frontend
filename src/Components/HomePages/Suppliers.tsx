@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import NavBar from '../NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
@@ -94,7 +94,7 @@ const Suppliers = () => {
                         Suppliers
                         <FontAwesomeIcon
                             icon={faPlus}
-                            onClick={() => setToggleOpenModal(true)}
+                            onClick={() => toggleAddModal(false)}
                             className='mb-1 ml-3 text-lg cursor-pointer hover:bg-gray-100 rounded'
                         />
                     </div>
@@ -181,13 +181,15 @@ const Suppliers = () => {
                     </div>
                 )}
             </div>
-            {toggleOpenModal && <SuppliersAddModal onClose={setToggleOpenModal} />}
+            {toggleOpenModal && <SuppliersAddModal onClose={toggleAddModal} />}
             {toggleOpenEditModal && (
                 <SuppliersEditModal
                     onClose={(confirm) => {
-                        setToggleOpenEditModal(false);
                         if (confirm) {
+                            setToggleOpenEditModal(false);
                             fetchData(); // Optionally fetch data upon confirmation
+                        } else {
+                            setToggleOpenEditModal(false);
                         }
                     }}
                     supplier={selectedSupplier as SuppliersData}
