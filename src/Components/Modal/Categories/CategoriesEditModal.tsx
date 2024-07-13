@@ -16,9 +16,12 @@ const CategoriesEditModal: React.FC<CategoriesEditModalProps> = ({ onClose, cate
     const [error, setError] = useState<string | null>(null);
     const [disabledButton, setDisabledButton] = useState<boolean>(false);
     const [disabledSubmitButton, setDisabledSubmitButton] = useState<boolean>(false);
+
+    // Function to update the category data via API call
     const updateCategory = async () => {
-        setDisabledButton(true);
+        setDisabledButton(true); // Disable buttons during API call
         setDisabledSubmitButton(true);
+
         try {
             const response = await axios.put(
                 `${import.meta.env.VITE_API_ENDPOINT}category`,
@@ -30,27 +33,31 @@ const CategoriesEditModal: React.FC<CategoriesEditModalProps> = ({ onClose, cate
                     },
                 },
             );
+
             if (response.status === 200) {
                 onClose(true); // Close modal and optionally trigger fetchData()
-                setDisabledButton(false);
-                setDisabledSubmitButton(false);
             }
         } catch (error) {
-            handleFetchError(error as AxiosError);
+            handleFetchError(error as AxiosError); // Handle API call errors
+        } finally {
+            setDisabledButton(false); // Re-enable buttons after API call
+            setDisabledSubmitButton(false);
         }
     };
+
+    // Function to validate form data
     const validator = () => {
-        if (categoryData.name !== '') {
-            setDisabledSubmitButton(false); // Enable submit button if form is valid
-        } else {
-            setDisabledSubmitButton(true); // Disable submit button if form is incomplete
-        }
+        // Simple validation: disable submit button if name field is empty
+        setDisabledSubmitButton(categoryData.name === '');
     };
+
+    // Handle input change in the form fields
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
         setCategoryData((prevValue) => ({ ...prevValue, [name]: value }));
-        console.log(`${name} ${value}`);
     };
+
+    // Handle API call errors
     const handleFetchError = (error: AxiosError<any>) => {
         if (error.response) {
             const responseData = error.response.data;
@@ -62,20 +69,25 @@ const CategoriesEditModal: React.FC<CategoriesEditModalProps> = ({ onClose, cate
             setError('Error fetching data. Please check your network connection.');
         }
 
-        setDisabledButton(false); // Enable retry button and reset form for retry
         validator(); // Re-validate form after handling error
     };
+
+    // Handle retry button click
     const handleRetry = () => {
         setError(null); // Clear the error message
         setDisabledButton(false); // Enable form inputs for retry
+        setDisabledSubmitButton(false);
     };
+
+    // Effect to validate form on mount and whenever categoryData changes
     useEffect(() => {
         validator();
     }, [categoryData]);
+
     return (
         <div className='fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100 shadow-lg rounded-lg p-6 z-100 bg-base-200'>
             {error ? (
-                // Display error message and retry button
+                // Display error message and retry button if error state is not null
                 <div className='text-2xl flex justify-center text-center mt-9 p-4'>
                     {error}
                     <button onClick={handleRetry} className='ml-2 text-blue-500 hover:underline'>
@@ -83,10 +95,10 @@ const CategoriesEditModal: React.FC<CategoriesEditModalProps> = ({ onClose, cate
                     </button>
                 </div>
             ) : (
-                // Display form inputs and buttons
+                // Display form inputs and buttons if there is no error
                 <>
                     <h3 className='text-lg font-bold mb-2 flex justify-center z-50'>
-                        Add Product Category
+                        Edit Product Category
                     </h3>
                     <label className='m-2 input input-bordered flex items-center gap-2'>
                         <FontAwesomeIcon icon={faUtensils} />
@@ -116,7 +128,8 @@ const CategoriesEditModal: React.FC<CategoriesEditModalProps> = ({ onClose, cate
                             onClick={updateCategory}
                             disabled={disabledSubmitButton || disabledButton} // Disable if either form is incomplete or retrying
                         >
-                            Confirm
+                            {disabledButton ? 'Updating...' : 'Confirm'}{' '}
+                            {/* Change button text during API call */}
                         </button>
                     </div>
                 </>
