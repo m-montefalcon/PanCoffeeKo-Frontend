@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faDollarSign,
-    faHashtag,
-    faMessage,
-    faPesoSign,
-    faUtensils,
-} from '@fortawesome/free-solid-svg-icons';
+import { faHashtag, faMessage, faPesoSign, faUtensils } from '@fortawesome/free-solid-svg-icons';
 import axios, { AxiosError } from 'axios';
 
 interface ProductsAddModalProps {
@@ -37,7 +31,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
         supplier_id: '',
     });
 
-    const [options, setOptions] = useState<{
+    const [{ suppliers, categories }, setOptions] = useState<{
         suppliers: OptionData[];
         categories: OptionData[];
     }>({
@@ -47,28 +41,31 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
 
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [isDisabledButton, setIsDisabledButton] = useState<boolean>(true); // Initially disable button
+    const [isDisabledButton, setIsDisabledButton] = useState<boolean>(true);
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = event.target;
+        setFormState((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
+    };
+
+    const isFormValid = () => {
+        const { name, description, price, quantity, product_category_id, supplier_id } = formState;
+        const isEmptyForm =
+            !name ||
+            !description ||
+            price === 0 ||
+            quantity === 0 ||
+            !product_category_id ||
+            !supplier_id;
+        const isPriceValid = /^\d+(\.\d{1,2})?$/.test(price.toString());
+        const isQuantityValid = quantity > 0;
+        return isEmptyForm || !isPriceValid || !isQuantityValid;
+    };
 
     useEffect(() => {
-        // Validation logic to determine if the button should be disabled
-        const isFormValid = () => {
-            // Check if all form fields are empty
-            const isEmptyForm =
-                formState.name === '' &&
-                formState.description === '' &&
-                formState.price === 0 &&
-                formState.quantity === 0 &&
-                formState.product_category_id === '' &&
-                formState.supplier_id === '';
-
-            // Check specific conditions for disabling
-            const isPriceValid = /^\d+(\.\d{1,2})?$/.test(formState.price.toString()); // Price should only be 2 digits decimal
-            const isQuantityValid = formState.quantity !== 0 && formState.price !== 0; // Quantity and price should not be 0
-
-            return isEmptyForm || !isPriceValid || !isQuantityValid;
-        };
-
-        // Update disabled state of the button
         setIsDisabledButton(isFormValid());
     }, [formState]);
 
@@ -111,7 +108,6 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
 
     const postProduct = async () => {
         setIsLoading(true);
-
         try {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_ENDPOINT}product`,
@@ -134,20 +130,10 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
         }
     };
 
-    const handleChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-        const { name, value } = event.target;
-        setFormState((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }));
-    };
-
     const handleRetry = () => {
         setError(null);
         fetchData();
     };
-
-    const { categories, suppliers } = options;
 
     return (
         <div className='fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100 shadow-lg rounded-lg p-6 z-100 bg-base-200'>
@@ -168,7 +154,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                 </>
             ) : error ? (
                 <div className='text-2xl flex justify-center text-center mt-9 p-4'>
-                    Error occurred.{' '}
+                    {error}
                     <button onClick={handleRetry} className='ml-2 text-blue-500 hover:underline'>
                         Retry
                     </button>
@@ -300,7 +286,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                         </button>
                         <button
                             className='btn btn-success mt-2 rounded-md'
-                            disabled={isDisabledButton || isLoading} // Disable based on validation and loading state
+                            disabled={isDisabledButton || isLoading}
                             onClick={postProduct}
                         >
                             {isLoading ? 'Adding...' : 'Confirm'}
