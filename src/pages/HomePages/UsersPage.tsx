@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import NavBar from '../NavBar/NavBar';
+import NavBar from '../../Components/NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import UsersEditModal from '../Modal/Users/UsersEditModal';
-import UsersAddModal from '../Modal/Users/UsersAddModal';
+import UsersEditModal from '../../Components/Modal/Users/UsersEditModal';
+import UsersAddModal from '../../Components/Modal/Users/UsersAddModal';
 interface UserData {
     id: string;
     name: string;

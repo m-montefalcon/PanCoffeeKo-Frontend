@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHashtag, faMessage, faPesoSign, faUtensils } from '@fortawesome/free-solid-svg-icons';
 import axios, { AxiosError } from 'axios';
-
+import InputComponent from '../../Inputs/InputComponent';
+import LoadingComponent from '../../Common/LoadingComponent';
+import ErrorComponent from '../../Common/ErrorComponent';
+import SelectComponent from '../../Inputs/SelectComponent';
+import ModalLayoutComponent from '../../Common/ModalLayoutComponent';
 interface ProductsAddModalProps {
     onClose: (confirm: boolean) => void;
 }
@@ -14,6 +18,7 @@ interface FormState {
     quantity: number;
     product_category_id: string;
     supplier_id: string;
+    photo: File | null;
 }
 
 interface OptionData {
@@ -21,55 +26,77 @@ interface OptionData {
     name: string;
 }
 
-const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
-    const [formState, setFormState] = useState<FormState>({
-        name: '',
-        description: '',
-        price: 0,
-        quantity: 0,
-        product_category_id: '',
-        supplier_id: '',
-    });
+const initialFormState: FormState = {
+    name: '',
+    description: '',
+    price: 0,
+    quantity: 0,
+    product_category_id: '',
+    supplier_id: '',
+    photo: null,
+};
 
+const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
+    const [formState, setFormState] = useState<FormState>(initialFormState);
     const [{ suppliers, categories }, setOptions] = useState<{
         suppliers: OptionData[];
         categories: OptionData[];
-    }>({
-        suppliers: [],
-        categories: [],
-    });
-
+    }>({ suppliers: [], categories: [] });
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDisabledButton, setIsDisabledButton] = useState<boolean>(true);
+    const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = event.target;
-        setFormState((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }));
-    };
+    const handleChange = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+            const { name, value } = event.target;
 
-    const isFormValid = () => {
-        const { name, description, price, quantity, product_category_id, supplier_id } = formState;
+            if (name === 'photo') {
+                const fileInput = event.target as HTMLInputElement;
+                const file = fileInput.files?.[0];
+                setFormState((prevState) => ({
+                    ...prevState,
+                    photo: file || null,
+                }));
+
+                if (file) {
+                    const imageUrl = URL.createObjectURL(file);
+                    setPhotoPreviewUrl(imageUrl);
+                } else {
+                    setPhotoPreviewUrl(null);
+                }
+                return;
+            }
+
+            setFormState((prevState) => ({
+                ...prevState,
+                [name]: name === 'price' || name === 'quantity' ? parseFloat(value) : value,
+            }));
+        },
+        [],
+    );
+
+    const isFormValid = useCallback(() => {
+        const { name, description, price, quantity, product_category_id, supplier_id, photo } =
+            formState;
         const isEmptyForm =
             !name ||
             !description ||
             price === 0 ||
             quantity === 0 ||
             !product_category_id ||
-            !supplier_id;
+            !supplier_id ||
+            !photo;
         const isPriceValid = /^\d+(\.\d{1,2})?$/.test(price.toString());
         const isQuantityValid = quantity > 0;
         return isEmptyForm || !isPriceValid || !isQuantityValid;
-    };
+    }, [formState]);
 
     useEffect(() => {
         setIsDisabledButton(isFormValid());
-    }, [formState]);
+    }, [formState, isFormValid]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await axios.get<{
@@ -81,16 +108,15 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     suppliers: response.data.suppliers,
                     categories: response.data.categories,
                 });
-                setIsLoading(false);
             }
         } catch (error) {
-            console.error(error);
-            setIsLoading(false);
             handleFetchError(error as AxiosError);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, []);
 
-    const handleFetchError = (error: AxiosError<any>) => {
+    const handleFetchError = useCallback((error: AxiosError<any>) => {
         if (error.response) {
             const responseData = error.response.data;
             const errorMessage = responseData.message || 'Unknown error occurred';
@@ -100,35 +126,38 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
         } else {
             setError('Error fetching data. Please check your network connection.');
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
-    const postProduct = async () => {
+    const postProduct = useCallback(async () => {
         setIsLoading(true);
         try {
+            const formData = new FormData();
+            Object.entries(formState).forEach(([key, value]) => {
+                if (key === 'photo' && value) {
+                    formData.append(key, value);
+                } else if (key !== 'photo') {
+                    formData.append(key, typeof value === 'number' ? value.toString() : value);
+                }
+            });
+
             const response = await axios.post(
                 `${import.meta.env.VITE_API_ENDPOINT}product`,
-                formState,
-                {
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                },
+                formData,
             );
+
             if (response.status === 200) {
-                console.log('success');
                 onClose(true);
             }
         } catch (error) {
-            console.error(error);
-            setIsLoading(false);
             handleFetchError(error as AxiosError);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [formState, handleFetchError, onClose]);
 
     const handleRetry = () => {
         setError(null);
@@ -136,29 +165,25 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
     };
 
     return (
-        <div className='fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-100 shadow-lg rounded-lg p-6 z-100 bg-base-200'>
+        <ModalLayoutComponent>
             {isLoading ? (
                 <>
-                    <h3 className='text-lg font-bold mb-2 flex justify-center z-50'>Loading...</h3>
-                    <span className='loading loading-dots loading-lg flex justify-center w-30 my-10 mx-auto z-0'></span>
+                    <LoadingComponent />
                     <div className='flex justify-end'>
                         <button
                             type='button'
                             onClick={() => onClose(false)}
                             className='btn m-2 data-theme rounded-md'
-                            disabled={true} // Always disabled during loading
+                            disabled={true}
                         >
                             Cancel
                         </button>
                     </div>
                 </>
             ) : error ? (
-                <div className='text-2xl flex justify-center text-center mt-9 p-4'>
-                    {error}
-                    <button onClick={handleRetry} className='ml-2 text-blue-500 hover:underline'>
-                        Retry
-                    </button>
-                </div>
+                <>
+                    <ErrorComponent error={error} handleRetry={handleRetry} />
+                </>
             ) : (
                 <>
                     <h3 className='text-lg font-bold mb-2 flex justify-center z-50'>
@@ -166,7 +191,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     </h3>
                     <label className='m-2 input input-bordered flex items-center gap-2'>
                         <FontAwesomeIcon icon={faUtensils} />
-                        <input
+                        <InputComponent
                             name='name'
                             type='text'
                             className='grow'
@@ -179,7 +204,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     </label>
                     <label className='m-2 input input-bordered flex items-center gap-2'>
                         <FontAwesomeIcon icon={faMessage} />
-                        <input
+                        <InputComponent
                             name='description'
                             type='text'
                             className='grow'
@@ -192,26 +217,26 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     </label>
                     <label className='m-2 input input-bordered flex items-center gap-2'>
                         <FontAwesomeIcon icon={faPesoSign} />
-                        <input
+                        <InputComponent
                             name='price'
                             type='number'
-                            min='0.00'
-                            step='0.01'
                             className='grow'
                             placeholder='Price'
                             value={formState.price}
                             onChange={handleChange}
                             required
                             disabled={isLoading}
+                            min='0.00'
+                            step='0.01'
                         />
                     </label>
                     <label className='m-2 input input-bordered flex items-center gap-2'>
                         <FontAwesomeIcon icon={faHashtag} />
-                        <input
+                        <InputComponent
                             name='quantity'
                             type='number'
                             className='grow'
-                            placeholder='quantity'
+                            placeholder='Quantity'
                             value={formState.quantity}
                             onChange={handleChange}
                             required
@@ -220,61 +245,48 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     </label>
 
                     <div className='flex items-center gap-2 justify-center'>
-                        <select
-                            className='m-2 select w-80'
+                        <SelectComponent
+                            placeholder='Product category'
                             name='product_category_id'
-                            value={formState.product_category_id}
+                            className='m-2 select w-80'
                             onChange={handleChange}
                             required
                             disabled={!categories || categories.length === 0 || isLoading}
-                        >
-                            {!categories || categories.length === 0 ? (
-                                <option value='' disabled>
-                                    No categories available
-                                </option>
-                            ) : (
-                                <>
-                                    <option value='' disabled>
-                                        Select category
-                                    </option>
-                                    {categories.map((data) => (
-                                        <option key={data.id} value={data.id}>
-                                            {data.name}
-                                        </option>
-                                    ))}
-                                </>
-                            )}
-                        </select>
+                            data={categories}
+                            value={formState.product_category_id}
+                        />
                     </div>
 
                     <div className='flex items-center gap-2 justify-center'>
-                        <select
-                            className='m-2 select w-80'
+                        <SelectComponent
+                            placeholder='Supplier'
                             name='supplier_id'
-                            value={formState.supplier_id}
+                            className='m-2 select w-80'
                             onChange={handleChange}
                             required
                             disabled={!suppliers || suppliers.length === 0 || isLoading}
-                        >
-                            {!suppliers || suppliers.length === 0 ? (
-                                <option value='' disabled>
-                                    No suppliers available
-                                </option>
-                            ) : (
-                                <>
-                                    <option value='' disabled>
-                                        Select supplier
-                                    </option>
-                                    {suppliers.map((data) => (
-                                        <option key={data.id} value={data.id}>
-                                            {data.name}
-                                        </option>
-                                    ))}
-                                </>
-                            )}
-                        </select>
+                            data={suppliers}
+                            value={formState.supplier_id}
+                        />
                     </div>
-
+                    <div>
+                        <label className='m-2 my-0 py-0 form-control w-full max-w-xs'>
+                            <div className=' m-0 label'>
+                                <span className='mb-0 label-text'>Product Photo</span>
+                            </div>
+                            <InputComponent
+                                type='file'
+                                name='photo'
+                                className='my-0 file-input file-input-bordered file-input-sm w-full max-w-xs'
+                                onChange={handleChange}
+                                placeholder={''}
+                                value={''}
+                            />
+                        </label>
+                        {photoPreviewUrl && (
+                            <img src={photoPreviewUrl} alt='Preview' className='mt-2 max-w-xs' />
+                        )}
+                    </div>
                     <div className='flex justify-end'>
                         <button
                             type='button'
@@ -294,7 +306,7 @@ const ProductsAddModal: React.FC<ProductsAddModalProps> = ({ onClose }) => {
                     </div>
                 </>
             )}
-        </div>
+        </ModalLayoutComponent>
     );
 };
 

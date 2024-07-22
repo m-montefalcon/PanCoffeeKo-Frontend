@@ -1,4 +1,4 @@
-import NavBar from '../NavBar/NavBar';
+import NavBar from '../../Components/NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 const TransactionsPage = () => {

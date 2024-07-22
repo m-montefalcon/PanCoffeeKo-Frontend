@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
-import UsersPage from './Components/HomePages/UsersPage';
-import ProductsPage from './Components/HomePages/ProductsPage';
-import CategoriesPage from './Components/HomePages/CategoriesPage';
-import Suppliers from './Components/HomePages/Suppliers';
-import TransactionsPage from './Components/HomePages/TransactionsPage';
+import UsersPage from './pages/HomePages/UsersPage';
+import ProductsPage from './pages/HomePages/ProductsPage';
+import CategoriesPage from './pages/HomePages/CategoriesPage';
+import Suppliers from './pages/HomePages/Suppliers';
+import TransactionsPage from './pages/HomePages/TransactionsPage';
 
 const App = () => {
     return (
