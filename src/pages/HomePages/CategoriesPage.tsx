@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import NavBar from '../NavBar/NavBar';
+import NavBar from '../../Components/NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios, { AxiosError } from 'axios';
-import CategoriesAddModal from '../Modal/Categories/CategoriesAddModal';
-import CategoriesEditModal from '../Modal/Categories/CategoriesEditModal';
-import CategoriesDeleteModal from '../Modal/Categories/CategoriesDeleteModal';
+import CategoriesAddModal from '../../Components/Modal/Categories/CategoriesAddModal';
+import CategoriesEditModal from '../../Components/Modal/Categories/CategoriesEditModal';
+import CategoriesDeleteModal from '../../Components/Modal/Categories/CategoriesDeleteModal';
 
 // Interface for category data structure
 interface CategoriesData {

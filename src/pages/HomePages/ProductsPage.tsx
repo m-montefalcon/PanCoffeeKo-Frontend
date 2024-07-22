@@ -1,58 +1,44 @@
-import { useEffect, useState } from 'react';
-import NavBar from '../NavBar/NavBar';
+import NavBar from '../../Components/NavBar/NavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState } from 'react';
+import ProductsAddModal from '../../Components/Modal/Products/ProductsAddModal';
 import axios, { AxiosError } from 'axios';
-import SuppliersAddModal from '../Modal/Suppliers/SuppliersAddModal';
-import SuppliersEditModal from '../Modal/Suppliers/SuppliersEditModal';
+import LoadingComponent from '../../Components/Common/LoadingComponent';
+import ErrorComponent from '../../Components/Common/ErrorComponent';
 
-// Define the SuppliersData interface
-interface SuppliersData {
+interface ProductsData {
     id: string;
     name: string;
-    contact_number: string;
-    supply_type: string;
+    price: string;
+    quantity: number;
 }
-
-// Suppliers functional component
-const Suppliers = () => {
-    const [suppliers, setSuppliers] = useState<SuppliersData[]>([]);
-    const [toggleOpenModal, setToggleOpenModal] = useState<boolean>(false);
-    const [toggleOpenEditModal, setToggleOpenEditModal] = useState<boolean>(false);
-    const [isLoading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalPages, setTotalPages] = useState<number>(0);
-    const perPage = 10;
-    const startItemNumber = (currentPage - 1) * perPage + 1;
-    const [selectedSupplier, setSelectedSupplier] = useState<SuppliersData>();
-
-    // Function to toggle the add modal and fetch data upon confirmation
-    const toggleAddModal = (confirm: boolean) => {
-        setToggleOpenModal((prevState) => !prevState);
-        if (confirm) {
-            fetchData();
+const ProductsPage = () => {
+    const [products, setProducts] = useState<ProductsData[]>([]);
+    const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
+    const toggleModal = (type: 'add' | 'edit') => {
+        if (type === 'add') {
+            setModalType('add');
         }
     };
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [currentPage, setCurrentPage] = useState<number>(1); // State for current page of pagination
+    const [totalPages, setTotalPages] = useState<number>(0); // State for total pages of pagination
+    const perPage = 10; // Number of items per page
+    const startItemNumber = (currentPage - 1) * perPage + 1; // Starting item number for current page
 
-    // Function to toggle the edit modal and set selected supplier
-    const toggleEditModal = (supplier: SuppliersData) => {
-        setSelectedSupplier(supplier); // Set selected supplier
-        setToggleOpenEditModal(true); // Open edit modal
-    };
-
-    // Function to fetch data from API
     const fetchData = async (page: number = currentPage) => {
         try {
-            setLoading(true);
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_ENDPOINT}suppliers?page=${page}&per_page=${perPage}`,
-            );
+            const response = await axios.get<{
+                products: { current_page: number; data: ProductsData[] };
+                meta: { last_page: number };
+            }>(`${import.meta.env.VITE_API_ENDPOINT}products?page=${page}&per_page=${perPage}`);
             if (response.status === 200) {
-                setSuppliers(response.data.suppliers.data);
-                setCurrentPage(response.data.suppliers.current_page);
-                setTotalPages(response.data.suppliers.last_page);
-                setLoading(false);
+                setProducts(response.data.products.data);
+                setCurrentPage(response.data.products.current_page); // Set current page number
+                setTotalPages(response.data.meta.last_page); // Set total pages from metadata
+                setIsLoading(false);
             }
         } catch (error) {
             handleFetchError(error as AxiosError);
@@ -61,7 +47,7 @@ const Suppliers = () => {
 
     // Function to handle fetch errors
     const handleFetchError = (error: AxiosError<any>) => {
-        setLoading(false);
+        setIsLoading(false);
         if (error.response) {
             const responseData = error.response.data;
             const errorMessage = responseData.message || 'Unknown error occurred';
@@ -76,25 +62,23 @@ const Suppliers = () => {
     // Function to clear error state and fetch data
     const clearError = () => {
         setError(null);
-        setLoading(true);
+        setIsLoading(true);
         fetchData();
     };
 
-    // useEffect hook to fetch data initially and on page change
     useEffect(() => {
         fetchData();
     }, [currentPage]);
-
     return (
         <>
             <NavBar />
             <div className=' data-theme h-auto w-auto m-16 my-28 border-slate-border-slate-950 rounded'>
                 <div className='flex items-center justify-between'>
                     <div className='text-3xl'>
-                        Suppliers
+                        Products
                         <FontAwesomeIcon
                             icon={faPlus}
-                            onClick={() => toggleAddModal(false)}
+                            onClick={() => toggleModal('add')}
                             className='mb-1 ml-3 text-lg cursor-pointer hover:bg-gray-100 rounded'
                         />
                     </div>
@@ -117,37 +101,45 @@ const Suppliers = () => {
                     </div>
                 </div>
                 {isLoading ? (
-                    <span className='loading loading-dots loading-lg flex justify-center w-30 my-10 mx-auto z-0'></span>
+                    <LoadingComponent />
                 ) : error ? (
-                    <div className='text-2xl flex justify-center text-center mt-9 p-4'>
-                        {error}
-                        <button onClick={clearError} className='ml-2 text-blue-500 hover:underline'>
-                            Retry
-                        </button>
-                    </div>
-                ) : suppliers.length > 0 ? (
+                    <ErrorComponent error={error} handleRetry={clearError} />
+                ) : products.length > 0 ? (
                     <>
                         <div className='overflow-x-auto  border-inherit	'>
                             <table className='table'>
+                                {/* head */}
                                 <thead>
                                     <tr>
                                         <th></th>
                                         <th>Name</th>
-                                        <th>Contact Number</th>
-                                        <th>Supply Type</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
                                         <th>Actions</th>
+                                        <th>Edit</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {suppliers.map((data, index) => (
-                                        <tr key={data.id} className='hover'>
+                                    {/* row 1 */}
+
+                                    {products.map((data, index) => (
+                                        <tr className='hover' key={data.id}>
                                             <th>{startItemNumber + index}</th>
                                             <td>{data.name}</td>
-                                            <td>{data.contact_number}</td>
-                                            <td>{data.supply_type}</td>
+                                            <td>{data.price}</td>
+                                            <td>{data.quantity}</td>
+                                            <td>
+                                                <div className='flex flex-col gap-1 w-14'>
+                                                    <button className='btn btn-outline btn-info'>
+                                                        Stock In
+                                                    </button>
+                                                    <button className='btn btn-outline btn-warning'>
+                                                        Stock Out
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <FontAwesomeIcon
-                                                    onClick={() => toggleEditModal(data)}
                                                     icon={faPenToSquare}
                                                     className='text-lg cursor-pointer hover:bg-gray-100 rounded'
                                                 />
@@ -159,18 +151,19 @@ const Suppliers = () => {
                             <div className='flex justify-center mt-4'>
                                 <button
                                     className='join-item btn'
-                                    disabled={currentPage <= 1}
-                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    disabled={currentPage <= 1} // Disable previous page button on first page
+                                    onClick={() => setCurrentPage(currentPage - 1)} // Go to previous page
                                 >
-                                    «
+                                    « {/* Previous page button */}
                                 </button>
-                                <span className='join-item btn'>Page {currentPage}</span>
+                                <span className='join-item btn'>Page {currentPage}</span>{' '}
+                                {/* Current page indicator */}
                                 <button
                                     className='join-item btn'
-                                    disabled={currentPage >= totalPages}
-                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    disabled={currentPage >= totalPages} // Disable next page button on last page
+                                    onClick={() => setCurrentPage(currentPage + 1)} // Go to next page
                                 >
-                                    »
+                                    » {/* Next page button */}
                                 </button>
                             </div>
                         </div>
@@ -181,22 +174,19 @@ const Suppliers = () => {
                     </div>
                 )}
             </div>
-            {toggleOpenModal && <SuppliersAddModal onClose={toggleAddModal} />}
-            {toggleOpenEditModal && (
-                <SuppliersEditModal
-                    onClose={(confirm) => {
+            {modalType === 'add' && (
+                <ProductsAddModal
+                    onClose={(confirm: boolean) => {
+                        setModalType(null);
+
                         if (confirm) {
-                            setToggleOpenEditModal(false);
-                            fetchData(); // Optionally fetch data upon confirmation
-                        } else {
-                            setToggleOpenEditModal(false);
+                            fetchData();
                         }
                     }}
-                    supplier={selectedSupplier as SuppliersData}
                 />
             )}
         </>
     );
 };
 
-export default Suppliers;
+export default ProductsPage;
