@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import ProductsAddModal from '../../Components/Modal/Products/ProductsAddModal';
+import ProductsEditModal from '../../Components/Modal/Products/ProductsEditModal';
 import axios, { AxiosError } from 'axios';
 import LoadingComponent from '../../Components/Common/LoadingComponent';
 import ErrorComponent from '../../Components/Common/ErrorComponent';
@@ -16,11 +17,21 @@ interface ProductsData {
 const ProductsPage = () => {
     const [products, setProducts] = useState<ProductsData[]>([]);
     const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
-    const toggleModal = (type: 'add' | 'edit') => {
-        if (type === 'add') {
-            setModalType('add');
+    const toggleModal = (type: 'add' | 'edit', id?: string) => {
+        switch (type) {
+            case 'add':
+                setModalType('add');
+                break;
+
+            case 'edit':
+                setModalType('edit');
+                setSelectedProductId(id as string);
+                break;
+            default:
+                break;
         }
     };
+    const [selectedProductId, setSelectedProductId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1); // State for current page of pagination
@@ -142,6 +153,7 @@ const ProductsPage = () => {
                                                 <FontAwesomeIcon
                                                     icon={faPenToSquare}
                                                     className='text-lg cursor-pointer hover:bg-gray-100 rounded'
+                                                    onClick={() => toggleModal('edit', data.id)}
                                                 />
                                             </td>
                                         </tr>
@@ -183,6 +195,19 @@ const ProductsPage = () => {
                             fetchData();
                         }
                     }}
+                />
+            )}
+
+            {modalType === 'edit' && (
+                <ProductsEditModal
+                    onClose={(confirm: boolean) => {
+                        setModalType(null);
+
+                        if (confirm) {
+                            fetchData();
+                        }
+                    }}
+                    id={selectedProductId}
                 />
             )}
         </>
